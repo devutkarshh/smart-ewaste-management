@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Report Item — EcoByte{% endblock %}
+
+{% block content %}
+<div class="report-page">
+  <div class="page-header" style="padding-left:0;padding-right:0">
+    <h1 class="page-title">📦 Report an E-Waste Item</h1>
+    <p class="page-subtitle">Fill in the details below. A QR code and price estimate will be generated automatically.</p>
+  </div>
+
+  <div class="report-card">
+    <form method="POST" action="{{ url_for('report') }}" id="reportForm">
+
+      <!-- Category selector -->
+      <div class="form-group">
+        <label>Device Category <span style="color:var(--danger)">*</span></label>
+        <div class="category-grid">
+          {% set categories = [
+            ('Laptop', '💻'), ('Smartphone', '📱'), ('Desktop', '🖥️'),
+            ('Monitor', '🖥'), ('Printer', '🖨️'), ('Tablet', '📟'),
+            ('TV', '📺'), ('Battery', '🔋'), ('UPS', '⚡'),
+            ('Air Conditioner', '❄️'), ('Projector', '📽️'), ('Keyboard/Mouse', '⌨️'),
+            ('Camera', '📷'), ('Router/Modem', '🌐'), ('CFL/LED Bulb', '💡'),
+            ('Other', '📦'),
+          ] %}
+          {% for cat, icon in categories %}
+          <input type="radio" name="category" id="cat_{{ loop.index }}"
+                 value="{{ cat }}" class="category-option"
+                 {% if loop.first %}checked{% endif %}
+                 required>
+          <label class="category-label" for="cat_{{ loop.index }}">
+            <span class="cat-icon">{{ icon }}</span>
+            {{ cat }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Brand & Model -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="brand">Brand</label>
+          <input type="text" id="brand" name="brand" placeholder="e.g. Dell, HP, Samsung" list="brandList">
+          <datalist id="brandList">
+            {% for b in ['Dell','HP','Apple','Samsung','Lenovo','Acer','Asus','LG','Sony','Canon','Epson','Toshiba','Hitachi','Panasonic'] %}
+            <option value="{{ b }}">{% endfor %}
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="model_name">Model Name</label>
+          <input type="text" id="model_name" name="model_name" placeholder="e.g. Inspiron 15, iPhone 11">
+        </div>
+      </div>
+
+      <!-- Department -->
+      <div class="form-group">
+        <label for="department">Department / Location</label>
+        <select id="department" name="department">
+          {% for dept in ['Computer Science','Electrical Engineering','Electronics Engineering',
+                          'Mechanical Engineering','Physics Lab','Chemistry Lab','Maths Dept',
+                          'Admin Office','Library','Hostel','General'] %}
+          <option value="{{ dept }}"
+            {% if dept == session.get('department') %}selected{% endif %}>{{ dept }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Condition slider -->
+      <div class="form-group">
+        <label for="condition">
+          Condition &nbsp;<span id="condLabel" style="color:var(--green-4);font-weight:700">3 — Fair</span>
+        </label>
+        <input type="range" id="condition" name="condition" class="condition-slider"
+               min="1" max="5" value="3" step="1" style="width:100%;margin-top:.5rem">
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-4);margin-top:.3rem">
+          <span>1 — Broken</span><span>2 — Poor</span><span>3 — Fair</span><span>4 — Good</span><span>5 — Excellent</span>
+        </div>
+      </div>
+
+      <!-- Age & Price -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="age_years">Age (Years)</label>
+          <input type="number" id="age_years" name="age_years"
+                 min="0" max="30" step="0.5" value="2" placeholder="2">
+        </div>
+        <div class="form-group">
+          <label for="original_price">Original Purchase Price (₹)</label>
+          <input type="number" id="original_price" name="original_price"
+                 min="0" step="100" value="50000" placeholder="50000">
+        </div>
+      </div>
+
+      <!-- Live price preview -->
+      <div class="price-preview" id="pricePreview">
+        <div class="price-preview-label">🤖 Estimated Resale Value</div>
+        <div class="price-preview-val" id="priceVal">Calculating…</div>
+        <div style="font-size:.72rem;color:var(--text-4);margin-top:.3rem" id="mlNote"></div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group" style="margin-top:1.25rem">
+        <label for="description">Additional Description (optional)</label>
+        <textarea id="description" name="description"
+                  placeholder="Any extra details about the item's condition, accessories included, etc."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+        🚀 Submit &amp; Generate QR Code
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Condition slider label
+  const condNames = {1:'Broken',2:'Poor',3:'Fair',4:'Good',5:'Excellent'};
+  const slider = document.getElementById('condition');
+  slider.addEventListener('input', () => {
+    document.getElementById('condLabel').textContent =
+      slider.value + ' — ' + condNames[slider.value];
+    debouncedPredict();
+  });
+
+  // Live price prediction (debounced — waits 500ms after user stops typing)
+  let debounceTimer;
+  function debouncedPredict() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(predictPrice, 500);
+  }
+
+  function getSelectedCategory() {
+    const checked = document.querySelector('input[name="category"]:checked');
+    return checked ? checked.value : 'Laptop';
+  }
+
+  function predictPrice() {
+    const payload = {
+      category:       getSelectedCategory(),
+      brand:          document.getElementById('brand').value || 'HP',
+      condition:      parseInt(slider.value),
+      age_years:      parseFloat(document.getElementById('age_years').value) || 2,
+      original_price: parseFloat(document.getElementById('original_price').value) || 50000,
+    };
+
+    document.getElementById('priceVal').textContent = '…';
+
+    fetch('/api/predict-price', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify(payload),
+    })
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('priceVal').textContent = d.formatted;
+      document.getElementById('mlNote').textContent =
+        d.ml_used ? '(Random Forest ML model)' : '(depreciation formula estimate)';
+    })
+    .catch(() => {
+      document.getElementById('priceVal').textContent = '—';
+    });
+  }
+
+  // Attach listeners
+  ['brand','age_years','original_price'].forEach(id => {
+    document.getElementById(id).addEventListener('input', debouncedPredict);
+  });
+  document.querySelectorAll('input[name="category"]').forEach(r => {
+    r.addEventListener('change', debouncedPredict);
+  });
+
+  // Trigger on load
+  predictPrice();
+
+  // Disable submit to prevent double-submit
+  document.getElementById('reportForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = '⏳ Submitting…';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

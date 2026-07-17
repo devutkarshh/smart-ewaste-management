@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Login — EcoByte{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">♻️</div>
+    <h1 class="auth-title">Welcome Back</h1>
+    <p class="auth-subtitle">Log in to manage your e-waste reports</p>
+
+    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com"
+               required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••"
+               required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">
+        Login →
+      </button>
+    </form>
+
+    <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--card-border)">
+      <p style="font-size:.78rem;color:var(--text-3);font-weight:600;text-align:center;margin-bottom:.75rem">
+        DEMO ACCOUNTS
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+        <button class="btn btn-outline btn-sm" onclick="fillCreds('admin@ewaste.com','admin123')">
+          Admin
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="fillCreds('user@ewaste.com','user123')">
+          User
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="fillCreds('vendor@ewaste.com','vendor123')">
+          Vendor
+        </button>
+      </div>
+    </div>
+
+    <p class="auth-footer">
+      Don't have an account? <a href="{{ url_for('signup') }}">Sign up free</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function fillCreds(email, pw) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pw;
+  }
+  document.getElementById('loginForm').addEventListener('submit', function() {
+    document.getElementById('loginBtn').textContent = 'Logging in…';
+    document.getElementById('loginBtn').disabled = true;
+  });
+</script>
+{% endblock %}

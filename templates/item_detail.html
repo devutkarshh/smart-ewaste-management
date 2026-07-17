@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Item #{{ item['id'] }} — EcoByte{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:2rem auto;padding:0 1.5rem">
+
+  <div style="margin-bottom:1.25rem">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-sm">← Back to Dashboard</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem" class="item-detail-layout">
+
+    <!-- ── QR Card ── -->
+    <div class="card" style="text-align:center">
+      <h2 style="font-size:1rem;font-weight:700;color:var(--text-1);margin-bottom:1rem">
+        📱 QR Code — Item #{{ item['id'] }}
+      </h2>
+
+      {% if item['qr_code_path'] %}
+        <div style="background:white;border-radius:var(--radius);padding:1rem;display:inline-block">
+          <img src="{{ url_for('static', filename='qrcodes/item_' ~ item['id'] ~ '.png') }}"
+               alt="QR Code for item {{ item['id'] }}"
+               style="width:180px;height:180px">
+        </div>
+        <p style="font-size:.78rem;color:var(--text-3);margin-top:.75rem">
+          Print and attach to the device
+        </p>
+        <a href="{{ url_for('static', filename='qrcodes/item_' ~ item['id'] ~ '.png') }}"
+           download="ewaste_item_{{ item['id'] }}.png"
+           class="btn btn-outline btn-sm" style="margin-top:.75rem">
+          ⬇ Download QR Code
+        </a>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🔲</div>
+          <p>QR code not generated yet.</p>
+        </div>
+      {% endif %}
+
+      {% if item['predicted_price'] %}
+        <div style="margin-top:1.25rem;background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:var(--radius-sm);padding:1rem">
+          <div style="font-size:.72rem;color:var(--text-3);font-weight:700;text-transform:uppercase">
+            🤖 ML Predicted Value
+          </div>
+          <div style="font-size:1.8rem;font-weight:900;color:var(--green-4);margin-top:.25rem">
+            ₹{{ '{:,.0f}'.format(item['predicted_price']) }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Info Card ── -->
+    <div class="card">
+      <h2 style="font-size:1rem;font-weight:700;color:var(--text-1);margin-bottom:1rem">
+        📋 Item Details
+      </h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">Category</span>
+          <span class="info-val">{{ item['category'] }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Brand</span>
+          <span class="info-val">{{ item['brand'] }}</span>
+        </div>
+        {% if item['model_name'] %}
+        <div class="info-row">
+          <span class="info-label">Model</span>
+          <span class="info-val">{{ item['model_name'] }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+          <span class="info-label">Condition</span>
+          <span class="info-val">{{ item['condition'] }} / 5</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Age</span>
+          <span class="info-val">{{ item['age_years'] }} years</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Original Price</span>
+          <span class="info-val">₹{{ '{:,.0f}'.format(item['original_price']) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Department</span>
+          <span class="info-val">{{ item['department'] }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Classification</span>
+          <span class="info-val">
+            <span class="badge badge-{{ item['classification'] }}">{{ item['classification'] }}</span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-val">
+            <span class="badge badge-{{ item['status'] }}">{{ item['status'] }}</span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Reported On</span>
+          <span class="info-val">{{ item['created_at'][:10] }}</span>
+        </div>
+        {% if item['pickup_date'] %}
+        <div class="info-row">
+          <span class="info-label">Pickup Date</span>
+          <span class="info-val">{{ item['pickup_date'] }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if item['description'] %}
+        <div style="margin-top:1rem;padding:.85rem;background:rgba(76,175,80,.05);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-2)">
+          <strong style="color:var(--text-3);font-size:.75rem;text-transform:uppercase">Description:</strong><br>
+          {{ item['description'] }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Admin quick update (admin only) -->
+  {% if session.get('role') == 'admin' %}
+  <div class="card" style="margin-top:1.5rem">
+    <h3 style="font-size:.95rem;font-weight:700;color:var(--text-1);margin-bottom:1rem">⚙️ Admin: Update Status</h3>
+    <form method="POST" action="{{ url_for('admin_update_item', item_id=item['id']) }}"
+          style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;flex:1;min-width:160px">
+        <label>Status</label>
+        <select name="status" class="action-select">
+          {% for s in ['reported','approved','scheduled','collected','disposed'] %}
+          <option value="{{ s }}" {% if s == item['status'] %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:160px">
+        <label>Assign Vendor</label>
+        <select name="vendor_id">
+          <option value="">— None —</option>
+          {% for v in vendors %}
+          <option value="{{ v['id'] }}" {% if v['id'] == item['vendor_id'] %}selected{% endif %}>
+            {{ v['name'] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:140px">
+        <label>Pickup Date</label>
+        <input type="date" name="pickup_date" value="{{ item['pickup_date'] or '' }}">
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

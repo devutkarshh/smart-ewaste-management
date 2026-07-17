@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Campaigns — EcoByte{% endblock %}
+
+{% block content %}
+<div class="campaigns-page">
+  <div class="page-header" style="padding-left:0;padding-right:0">
+    <h1 class="page-title">📣 E-Waste Collection Campaigns</h1>
+    <p class="page-subtitle">
+      Awareness drives and collection events open to everyone.
+      Participate to earn points and contribute to a greener campus!
+    </p>
+  </div>
+
+  {% if campaigns %}
+    <div class="camp-grid">
+      {% for c in campaigns %}
+      {% set now = '' %}
+      <div class="camp-card">
+        <div class="camp-card-date">📅 {{ c['date'] }}</div>
+        <div class="camp-card-title">{{ c['title'] }}</div>
+        {% if c['location'] %}
+          <div class="camp-card-loc">📍 {{ c['location'] }}</div>
+        {% endif %}
+        {% if c['description'] %}
+          <div class="camp-card-desc">{{ c['description'] }}</div>
+        {% endif %}
+        <div class="camp-card-target">
+          Target: <strong>{{ c['target_items'] }}</strong> items to collect
+        </div>
+        {% if session.get('user_id') and session.get('role') == 'user' %}
+        <div style="margin-top:1rem">
+          <a href="{{ url_for('report') }}" class="btn btn-outline btn-sm">
+            📦 Report an Item for This Drive
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📅</div>
+      <h3>No upcoming campaigns</h3>
+      <p>Check back soon. Admins can create campaigns from the admin panel.</p>
+    </div>
+  {% endif %}
+
+  <!-- Info section -->
+  <div class="card" style="margin-top:3rem">
+    <h2 class="card-title">🌍 Why Participate?</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:1.25rem">
+      <div style="text-align:center;padding:1rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">♻️</div>
+        <div style="font-weight:700;color:var(--text-1);margin-bottom:.25rem">Reduce Landfill</div>
+        <div style="font-size:.83rem;color:var(--text-3)">E-waste in landfills leaches toxic chemicals. Proper recycling prevents this.</div>
+      </div>
+      <div style="text-align:center;padding:1rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">🌱</div>
+        <div style="font-weight:700;color:var(--text-1);margin-bottom:.25rem">Earn Points</div>
+        <div style="font-size:.83rem;color:var(--text-3)">Every item you report earns 10 points. Climb the leaderboard!</div>
+      </div>
+      <div style="text-align:center;padding:1rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">📋</div>
+        <div style="font-weight:700;color:var(--text-1);margin-bottom:.25rem">Stay Compliant</div>
+        <div style="font-size:.83rem;color:var(--text-3)">Help your institution meet CPCB and E-Waste (Management) Rules requirements.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

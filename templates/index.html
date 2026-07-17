@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}EcoByte — Smart E-Waste Management{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<section class="hero">
+  <!-- Animated floating particles (CSS-only) -->
+  <div class="particles" aria-hidden="true" id="particles"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      🌿 &nbsp; CPCB &amp; E-Waste (Management) Rules Compliant Platform
+    </div>
+
+    <h1>
+      Eco<span>Byte</span><br>E-Waste Management
+    </h1>
+
+    <p class="hero-sub">
+      A centralized platform for logging, tracking, and recycling e-waste in
+      academic campuses and residential complexes — from reporting to final disposal.
+    </p>
+
+    <div class="hero-actions">
+      {% if not session.get('user_id') %}
+        <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">Get Started Free</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Login</a>
+      {% else %}
+        <a href="{{ url_for('report') }}" class="btn btn-primary btn-lg">+ Report an Item</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">My Dashboard</a>
+      {% endif %}
+      <a href="{{ url_for('campaigns') }}" class="btn btn-outline btn-lg">View Campaigns</a>
+      <a href="{{ url_for('analytics') }}" class="btn btn-outline btn-lg">Analytics</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Impact strip ──────────────────────────────────────────────── -->
+<div class="impact-strip">
+  <div class="impact-item">
+    <div class="impact-num" id="counterItems">0</div>
+    <div class="impact-desc">Items Tracked</div>
+  </div>
+  <div class="impact-item">
+    <div class="impact-num" id="counterKg">0 kg</div>
+    <div class="impact-desc">E-Waste Diverted</div>
+  </div>
+  <div class="impact-item">
+    <div class="impact-num" id="counterCO2">0 kg</div>
+    <div class="impact-desc">CO₂ Emissions Saved</div>
+  </div>
+  <div class="impact-item">
+    <div class="impact-num">100%</div>
+    <div class="impact-desc">CPCB Compliant</div>
+  </div>
+</div>
+
+<!-- ── Features ──────────────────────────────────────────────────── -->
+<section class="features-section container">
+  <h2 class="section-title">🚀 Platform Features</h2>
+  <p style="color:var(--text-3);font-size:.9rem;max-width:600px">
+    Everything needed for end-to-end e-waste lifecycle management in one place.
+  </p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🖥️</div>
+      <div class="feature-num">Feature 01</div>
+      <div class="feature-title">Centralized Portal</div>
+      <div class="feature-desc">Log, track, and manage e-waste by department, category, brand, and age. Full lifecycle from reporting to disposal.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-num">Feature 02</div>
+      <div class="feature-title">QR Code Tagging</div>
+      <div class="feature-desc">Each reported item gets a unique QR code. Vendors scan it on pickup, auto-updating status in real-time.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-num">Feature 03</div>
+      <div class="feature-title">ML Price Prediction</div>
+      <div class="feature-desc">Random Forest model predicts current resale value of your device, encouraging responsible reporting over dumping.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <div class="feature-num">Feature 04</div>
+      <div class="feature-title">Smart Scheduling</div>
+      <div class="feature-desc">Auto-classify items as recyclable, reusable, or hazardous. Admin schedules vendor pickups efficiently.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-num">Feature 05</div>
+      <div class="feature-title">Analytics Dashboard</div>
+      <div class="feature-desc">Visualize e-waste trends, recovery rates, and environmental impact with interactive Chart.js dashboards.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <div class="feature-num">Feature 06</div>
+      <div class="feature-title">Compliance Reports</div>
+      <div class="feature-desc">One-click CSV report generation aligned with CPCB and E-Waste (Management) Rules for audits.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ──────────────────────────────────────────────── -->
+<section class="steps-section container">
+  <h2 class="section-title">⚙️ How It Works</h2>
+  <div class="steps-list">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <div class="step-text"><strong>Report:</strong> User submits e-waste item details — category, brand, condition, age, department. System auto-classifies it.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <div class="step-text"><strong>QR Tag:</strong> A unique QR code is generated and assigned to the item. User downloads and attaches it to the device.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <div class="step-text"><strong>Admin Approval:</strong> Admin reviews the item, approves it, and assigns a certified recycling vendor with a pickup date.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <div class="step-text"><strong>Vendor Pickup:</strong> Vendor scans the QR code (or enters item ID), marking it "Collected". Status updates instantly.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">5</div>
+      <div class="step-text"><strong>Final Disposal:</strong> Item is disposed/recycled. Entire lifecycle recorded for compliance and analytics dashboards.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Upcoming campaigns ─────────────────────────────────────────── -->
+{% if campaigns %}
+<section class="container" style="margin-bottom:3rem">
+  <h2 class="section-title">📣 Upcoming Campaigns</h2>
+  <div class="campaigns-grid">
+    {% for camp in campaigns %}
+    <div class="campaign-card">
+      <div class="campaign-date">📅 {{ camp['date'] }}</div>
+      <div class="campaign-title">{{ camp['title'] }}</div>
+      {% if camp['location'] %}
+        <div class="campaign-loc">📍 {{ camp['location'] }}</div>
+      {% endif %}
+      {% if camp['description'] %}
+        <div class="campaign-desc">{{ camp['description'] }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div style="text-align:center;margin-top:1.5rem">
+    <a href="{{ url_for('campaigns') }}" class="btn btn-outline">View All Campaigns →</a>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── Leaderboard ────────────────────────────────────────────────── -->
+{% if leaderboard %}
+<section class="container" style="max-width:640px;margin-bottom:4rem">
+  <h2 class="section-title">🏆 Top Contributors</h2>
+  <div class="leaderboard-list">
+    {% for user in leaderboard %}
+    <div class="lb-item">
+      <div class="lb-rank {% if loop.index0 == 0 %}gold{% elif loop.index0 == 1 %}silver{% elif loop.index0 == 2 %}bronze{% endif %}">
+        {{ loop.index }}
+      </div>
+      <div>
+        <div class="lb-name">{{ user['name'] }}</div>
+        <div class="lb-dept">{{ user['department'] }}</div>
+      </div>
+      <div class="lb-pts">{{ user['points'] }} pts</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Animated counter for impact strip
+  function animateCounter(el, target, suffix='') {
+    let start = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { start = target; clearInterval(timer); }
+      el.textContent = Math.floor(start).toLocaleString() + suffix;
+    }, 20);
+  }
+
+  // Fetch analytics to drive counters
+  fetch('/api/analytics')
+    .then(r => r.json())
+    .then(d => {
+      animateCounter(document.getElementById('counterItems'), d.total_items);
+      animateCounter(document.getElementById('counterKg'), d.kg_diverted, ' kg');
+      animateCounter(document.getElementById('counterCO2'), d.co2_saved, ' kg');
+    }).catch(() => {});
+
+  // Floating particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 14 + 4;
+    p.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${Math.random() * 100}%;
+      animation-duration: ${Math.random() * 15 + 8}s;
+      animation-delay: ${Math.random() * 10}s;
+      opacity: ${Math.random() * 0.4 + 0.1};
+    `;
+    container.appendChild(p);
+  }
+</script>
+{% endblock %}

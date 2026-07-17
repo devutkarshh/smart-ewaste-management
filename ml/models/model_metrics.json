@@ -1,0 +1,8 @@
+{
+  "mse": 3578645.3557662745,
+  "rmse": 1891.7307831100795,
+  "r2_score": 0.9887555370863582,
+  "feature_count": 42,
+  "training_samples": 8020,
+  "test_samples": 2005
+}

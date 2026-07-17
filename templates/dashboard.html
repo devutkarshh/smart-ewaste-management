@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — EcoByte{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- ── Left column: items ── -->
+  <div>
+    <!-- Welcome card -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:1.4rem;font-weight:800;color:var(--text-1)">
+            👋 Hello, {{ session.get('name') }}!
+          </div>
+          <div style="font-size:.875rem;color:var(--text-3);margin-top:.25rem">
+            {{ session.get('department') }} &nbsp;·&nbsp; {{ user['points'] }} points earned
+          </div>
+        </div>
+        <a href="{{ url_for('report') }}" class="btn btn-primary">+ Report New Item</a>
+      </div>
+    </div>
+
+    <!-- Quick stats -->
+    {% set statuses = ['reported','approved','scheduled','collected','disposed'] %}
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.5rem">
+      {% for s in statuses %}
+      {% set cnt = items | selectattr('status','equalto',s) | list | length %}
+      <div class="stat-card">
+        <div class="stat-number">{{ cnt }}</div>
+        <div class="stat-label">{{ s }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Items list -->
+    <h2 class="section-title">📦 My Reported Items</h2>
+
+    {% if items %}
+      <div class="items-grid">
+        {% for item in items %}
+        {% set icons = {'Laptop':'💻','Smartphone':'📱','Desktop':'🖥️','Monitor':'🖥','Printer':'🖨️','Tablet':'📟','TV':'📺','Battery':'🔋','UPS':'⚡','Air Conditioner':'❄️','Projector':'📽️','Keyboard/Mouse':'⌨️'} %}
+        <div class="item-row">
+          <div class="item-cat-icon">{{ icons.get(item['category'], '📦') }}</div>
+          <div class="item-info">
+            <div class="item-name">{{ item['brand'] }} {{ item['category'] }} {% if item['model_name'] %}· {{ item['model_name'] }}{% endif %}</div>
+            <div class="item-meta">
+              {{ item['department'] }} &nbsp;·&nbsp;
+              {{ item['age_years'] }} yr old &nbsp;·&nbsp;
+              {{ item['created_at'][:10] }}
+              &nbsp;·&nbsp;
+              <span class="badge badge-{{ item['classification'] }}">{{ item['classification'] }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0">
+            <span class="badge badge-{{ item['status'] }}">{{ item['status'] }}</span>
+            {% if item['predicted_price'] %}
+              <div class="item-price">₹{{ '{:,.0f}'.format(item['predicted_price']) }}</div>
+            {% endif %}
+            <a href="{{ url_for('item_detail', item_id=item['id']) }}" class="btn btn-sm btn-outline">View →</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">♻️</div>
+        <h3>No items reported yet</h3>
+        <p>Report your first e-waste item to get started.</p>
+        <a href="{{ url_for('report') }}" class="btn btn-primary" style="margin-top:1rem">
+          + Report an Item
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Right column: sidebar ── -->
+  <div>
+    <!-- Leaderboard -->
+    {% if leaderboard %}
+    <div class="card">
+      <div class="card-title">🏆 Leaderboard</div>
+      <div class="card-body" style="margin-bottom:.75rem">
+        Earn 10 pts per item reported.
+      </div>
+      <div class="leaderboard-list">
+        {% for u in leaderboard %}
+        <div class="lb-item">
+          <div class="lb-rank {% if loop.index0==0 %}gold{% elif loop.index0==1 %}silver{% elif loop.index0==2 %}bronze{% endif %}">
+            {{ loop.index }}
+          </div>
+          <div>
+            <div class="lb-name" style="font-size:.82rem">{{ u['name'] }}</div>
+            <div class="lb-dept">{{ u['department'] }}</div>
+          </div>
+          <div class="lb-pts">{{ u['points'] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Info card -->
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-title">📌 Item Statuses</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem">
+        {% for s, desc in [
+          ('reported','You submitted the item. Waiting for admin review.'),
+          ('approved','Admin approved it. Vendor will be assigned.'),
+          ('scheduled','Pickup scheduled with a vendor.'),
+          ('collected','Vendor has collected the item.'),
+          ('disposed','Item recycled/disposed. Lifecycle complete.'),
+        ] %}
+        <div style="display:flex;gap:.75rem;align-items:flex-start;font-size:.8rem">
+          <span class="badge badge-{{ s }}" style="flex-shrink:0">{{ s }}</span>
+          <span style="color:var(--text-3)">{{ desc }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div style="margin-top:1.25rem;text-align:center">
+      <a href="{{ url_for('analytics') }}" class="btn btn-outline btn-block">
+        📊 View Analytics
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

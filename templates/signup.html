@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Sign Up — EcoByte{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">🌿</div>
+    <h1 class="auth-title">Create Account</h1>
+    <p class="auth-subtitle">Join the e-waste management initiative</p>
+
+    <form method="POST" action="{{ url_for('signup') }}">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Rahul Sharma"
+               required autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@institution.ac.in"
+               required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="department">Department / Unit</label>
+        <select id="department" name="department">
+          <option value="Computer Science">Computer Science</option>
+          <option value="Electrical Engineering">Electrical Engineering</option>
+          <option value="Electronics Engineering">Electronics Engineering</option>
+          <option value="Mechanical Engineering">Mechanical Engineering</option>
+          <option value="Physics Lab">Physics Lab</option>
+          <option value="Chemistry Lab">Chemistry Lab</option>
+          <option value="Maths Dept">Maths Department</option>
+          <option value="Admin Office">Admin Office</option>
+          <option value="Library">Library</option>
+          <option value="Hostel">Hostel</option>
+          <option value="General">General / Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               placeholder="Min. 6 characters" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block">
+        Create Account →
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

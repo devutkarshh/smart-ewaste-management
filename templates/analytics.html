@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Analytics — EcoByte{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+
+  <div class="page-header" style="padding-left:0;padding-right:0">
+    <h1 class="page-title">📊 Analytics Dashboard</h1>
+    <p class="page-subtitle">Real-time e-waste trends, recovery rates, and environmental impact.</p>
+  </div>
+
+  <!-- Impact cards -->
+  <div class="impact-cards" id="impactCards">
+    <div class="impact-card">
+      <div class="impact-icon">📦</div>
+      <div class="impact-val" id="totalItems">—</div>
+      <div class="impact-lbl">Total Items</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-icon">✅</div>
+      <div class="impact-val" id="disposed">—</div>
+      <div class="impact-lbl">Disposed</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-icon">🌿</div>
+      <div class="impact-val" id="kgDiverted">—</div>
+      <div class="impact-lbl">kg Diverted</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-icon">🌍</div>
+      <div class="impact-val" id="co2Saved">—</div>
+      <div class="impact-lbl">kg CO₂ Saved</div>
+    </div>
+  </div>
+
+  <!-- Charts grid -->
+  <div class="charts-grid">
+
+    <!-- Items by Category (Bar) -->
+    <div class="chart-card">
+      <div class="chart-title">Items by Category</div>
+      <div class="chart-canvas">
+        <canvas id="chartCategory"></canvas>
+      </div>
+    </div>
+
+    <!-- Items by Classification (Doughnut) -->
+    <div class="chart-card">
+      <div class="chart-title">Recyclable · Reusable · Hazardous</div>
+      <div class="chart-canvas">
+        <canvas id="chartClassification"></canvas>
+      </div>
+    </div>
+
+    <!-- Monthly trend (Line) -->
+    <div class="chart-card">
+      <div class="chart-title">Monthly Trend (Last 6 Months)</div>
+      <div class="chart-canvas">
+        <canvas id="chartMonthly"></canvas>
+      </div>
+    </div>
+
+    <!-- Status breakdown (Bar) -->
+    <div class="chart-card">
+      <div class="chart-title">Status Breakdown</div>
+      <div class="chart-canvas">
+        <canvas id="chartStatus"></canvas>
+      </div>
+    </div>
+
+    <!-- By department (Horizontal Bar — full width) -->
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-title">Items by Department</div>
+      <div class="chart-canvas" style="height:220px">
+        <canvas id="chartDept"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Chart.js global defaults for dark theme
+  Chart.defaults.color          = '#a5d6a7';
+  Chart.defaults.borderColor    = 'rgba(76,175,80,0.12)';
+  Chart.defaults.font.family    = 'Inter, sans-serif';
+  Chart.defaults.plugins.legend.labels.color = '#a5d6a7';
+
+  const GREEN_PALETTE = [
+    '#4caf50','#66bb6a','#81c784','#a5d6a7','#c8e6c9',
+    '#388e3c','#2e7d32','#1b5e20','#b2dfdb','#80cbc4',
+  ];
+
+  const STATUS_COLORS = {
+    reported:  '#29b6f6',
+    approved:  '#aed581',
+    scheduled: '#ffcc80',
+    collected: '#81c784',
+    disposed:  '#c8e6c9',
+  };
+
+  const CLASS_COLORS = ['#66bb6a','#29b6f6','#ef9a9a'];
+
+  function makeChart(id, type, labels, values, colors, opts={}) {
+    const ctx = document.getElementById(id).getContext('2d');
+    return new Chart(ctx, {
+      type,
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderColor:     type === 'line' ? colors[0] : colors,
+          borderWidth:     type === 'line' ? 2 : 1,
+          fill:            type === 'line',
+          tension:         0.4,
+          pointRadius:     type === 'line' ? 4 : 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: type === 'doughnut' } },
+        scales: type !== 'doughnut' ? {
+          x: { ticks: { color: '#6a9f6e' }, grid: { color: 'rgba(76,175,80,0.08)' } },
+          y: { ticks: { color: '#6a9f6e' }, grid: { color: 'rgba(76,175,80,0.08)' } },
+        } : {},
+        ...opts,
+      },
+    });
+  }
+
+  // Fetch data and render all charts
+  fetch('/api/analytics')
+    .then(r => r.json())
+    .then(d => {
+
+      // Update impact cards
+      document.getElementById('totalItems').textContent = d.total_items;
+      document.getElementById('disposed').textContent   = d.disposed;
+      document.getElementById('kgDiverted').textContent = d.kg_diverted + ' kg';
+      document.getElementById('co2Saved').textContent   = d.co2_saved   + ' kg';
+
+      // Category bar chart
+      makeChart('chartCategory', 'bar',
+        d.by_category.map(x => x.category),
+        d.by_category.map(x => x.count),
+        d.by_category.map((_, i) => GREEN_PALETTE[i % GREEN_PALETTE.length]),
+      );
+
+      // Classification doughnut
+      makeChart('chartClassification', 'doughnut',
+        d.by_classification.map(x => x.classification),
+        d.by_classification.map(x => x.count),
+        CLASS_COLORS,
+        { plugins: { legend: { position: 'bottom' } } }
+      );
+
+      // Monthly line chart
+      makeChart('chartMonthly', 'line',
+        d.monthly.map(x => x.month),
+        d.monthly.map(x => x.count),
+        ['#4caf50'],
+      );
+
+      // Status bar chart
+      makeChart('chartStatus', 'bar',
+        d.by_status.map(x => x.status),
+        d.by_status.map(x => x.count),
+        d.by_status.map(x => STATUS_COLORS[x.status] || '#4caf50'),
+      );
+
+      // Department horizontal bar
+      const ctxDept = document.getElementById('chartDept').getContext('2d');
+      new Chart(ctxDept, {
+        type: 'bar',
+        data: {
+          labels: d.by_department.map(x => x.department),
+          datasets: [{
+            data: d.by_department.map(x => x.count),
+            backgroundColor: GREEN_PALETTE,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#6a9f6e' }, grid: { color: 'rgba(76,175,80,0.08)' } },
+            y: { ticks: { color: '#6a9f6e' }, grid: { display: false } },
+          },
+        },
+      });
+    })
+    .catch(err => console.error('Analytics fetch failed:', err));
+</script>
+{% endblock %}
